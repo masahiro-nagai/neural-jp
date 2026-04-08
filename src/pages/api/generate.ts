@@ -71,7 +71,7 @@ export async function POST({ request, cookies }: { request: Request, cookies: an
 
     // Gemini APIで記事生成
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash-lite-preview" });
 
     const prompt = `以下の情報を元に、技術ブログの記事（Markdown形式のFrontmatter付き）を作成してください。
 

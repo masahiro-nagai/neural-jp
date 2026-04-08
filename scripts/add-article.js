@@ -23,9 +23,8 @@ async function main() {
     process.exit(1);
   }
 
-  const genAI = new GoogleGenerativeAI(apiKey);
-  // より良い結果を得るために、最新モデルを使用
-  const model = genAI.getGenerativeModel({ model: "gemini-flash-lite-latest" });
+  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+  const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash-lite-preview" });
 
   const inputType = await rl.question("入力方法を選んでください (1: URL, 2: テキスト直接入力): ");
   let content = "";
