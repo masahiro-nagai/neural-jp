@@ -1,0 +1,116 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { SITE_TITLE } from '../consts';
+---
+
+<!doctype html>
+<html lang="ja">
+	<head>
+		<BaseHead title={`記事作成 | ${SITE_TITLE}`} description="Webから直接AI記事を生成して公開します" />
+	</head>
+	<body class="bg-gray-50 text-gray-900 font-sans">
+		<Header />
+		<main class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+			<div class="bg-white rounded-2xl shadow-sm p-8 border border-gray-100">
+				<h1 class="text-2xl font-bold mb-6">AIを利用した自動記事追加</h1>
+				
+				<p class="text-gray-600 mb-8 border-l-4 border-blue-500 pl-4 py-1 bg-blue-50 text-sm">
+					入力した情報の要約や翻訳を行い、Markdown記事を自動生成してGitHubへコミットします。
+					※ 本番環境(Vercel)で実行すると自動で再デプロイが行われ、記事が公開されます。
+				</p>
+
+				<form id="article-form" class="space-y-6">
+					<div>
+						<label class="block text-sm font-medium text-gray-700 mb-2">投稿用パスワード <span class="text-red-500">*</span></label>
+						<input type="password" id="password" required
+							class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" 
+							placeholder="合言葉を入力してください">
+					</div>
+
+					<div class="pt-4 border-t border-gray-100">
+						<label class="block text-sm font-medium text-gray-700 mb-2">元となるURL（英語の記事なども可）</label>
+						<input type="url" id="url"
+							class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" 
+							placeholder="https://...">
+					</div>
+
+					<div class="text-center text-sm font-bold text-gray-500 bg-white -mt-9 mx-auto w-16">または</div>
+
+					<div>
+						<label class="block text-sm font-medium text-gray-700 mb-2">直接テキストやアイデアを入力</label>
+						<textarea id="text" rows="5"
+							class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" 
+							placeholder="ここに情報をペーストするか、アイデアをメモしてください..."></textarea>
+					</div>
+
+					<div id="status-message" class="hidden rounded-md p-4 mb-4 whitespace-pre-wrap"></div>
+
+					<button type="submit" id="submit-btn"
+						class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-md hover:bg-blue-700 transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed">
+						記事を生成して公開する
+					</button>
+				</form>
+			</div>
+		</main>
+		<Footer />
+
+		<script>
+			const form = document.getElementById('article-form') as HTMLFormElement;
+			const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement;
+			const statusMsg = document.getElementById('status-message') as HTMLDivElement;
+
+			form?.addEventListener('submit', async (e) => {
+				e.preventDefault();
+				
+				const password = (document.getElementById('password') as HTMLInputElement).value;
+				const url = (document.getElementById('url') as HTMLInputElement).value;
+				const text = (document.getElementById('text') as HTMLTextAreaElement).value;
+
+				if (!url && !text) {
+					showStatus('error', 'URLかテキストのどちらかを入力してください');
+					return;
+				}
+
+				submitBtn.disabled = true;
+				submitBtn.textContent = '生成＆コミット中... (10〜30秒ほどかかります)';
+				statusMsg.classList.add('hidden');
+
+				try {
+					const res = await fetch('/api/generate', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({ password, url, text })
+					});
+
+					const data = await res.json();
+
+					if (!res.ok) {
+						throw new Error(data.error || '不明なエラーが発生しました');
+					}
+
+					showStatus('success', `成功しました！\nタイトル: ${data.title}\nファイル: ${data.filename}\n\n※ GitHubへのPushが完了したため、Vercelが再ビルドを開始します。数分後にこのサイト上に反映されます。`);
+					form.reset();
+				} catch (err: any) {
+					showStatus('error', err.message || '通信エラーが発生しました');
+				} finally {
+					submitBtn.disabled = false;
+					submitBtn.textContent = '記事を生成して公開する';
+				}
+			});
+
+			function showStatus(type: 'success' | 'error', message: string) {
+				statusMsg.classList.remove('hidden', 'bg-red-50', 'text-red-700', 'bg-green-50', 'text-green-700');
+				
+				if (type === 'error') {
+					statusMsg.classList.add('bg-red-50', 'text-red-700');
+				} else {
+					statusMsg.classList.add('bg-green-50', 'text-green-700');
+				}
+				
+				statusMsg.textContent = message;
+			}
+		</script>
+	</body>
+</html>
