@@ -9,11 +9,13 @@ const blog = defineCollection({
 	schema: ({ image }) =>
 		z.object({
 			title: z.string(),
-			description: z.string(),
-			// Transform string to Date object
+			description: z.string().optional(),
 			pubDate: z.coerce.date(),
 			updatedDate: z.coerce.date().optional(),
 			heroImage: z.optional(image()),
+			category: z.enum(['Google', 'OpenAI', 'Claude', 'ハーネスエンジニアリング', 'その他']).default('その他'),
+			tags: z.array(z.string()).default([]),
+			originalUrl: z.string().url().optional(), // 元の英語記事などのURL
 		}),
 });
 

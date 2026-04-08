@@ -1,5 +1,5 @@
 {
-  "name": "ai-tech-portal",
+  "name": "app",
   "type": "module",
   "version": "0.0.1",
   "engines": {
@@ -9,15 +9,23 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "add": "node scripts/add-article.js"
   },
   "dependencies": {
     "@astrojs/mdx": "^5.0.3",
     "@astrojs/rss": "^4.0.18",
     "@astrojs/sitemap": "^3.7.2",
+    "@google/generative-ai": "^0.24.1",
+    "@tailwindcss/typography": "^0.5.19",
     "@tailwindcss/vite": "^4.2.2",
     "astro": "^6.1.4",
+    "dotenv": "^17.4.1",
     "sharp": "^0.34.3",
     "tailwindcss": "^4.2.2"
+  },
+  "devDependencies": {
+    "astro-pagefind": "^1.8.6",
+    "pagefind": "^1.5.0"
   }
 }
