@@ -3,81 +3,66 @@ import { Image } from 'astro:assets';
 import type { CollectionEntry } from 'astro:content';
 import BaseHead from '../components/BaseHead.astro';
 import Footer from '../components/Footer.astro';
-import FormattedDate from '../components/FormattedDate.astro';
 import Header from '../components/Header.astro';
 
 type Props = CollectionEntry<'blog'>['data'];
 
-const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
+const { title, description, pubDate, updatedDate, heroImage, category, tags, originalUrl } = Astro.props;
 ---
 
-<html lang="en">
+<html lang="ja">
 	<head>
-		<BaseHead title={title} description={description} />
-		<style>
-			main {
-				width: calc(100% - 2em);
-				max-width: 100%;
-				margin: 0;
-			}
-			.hero-image {
-				width: 100%;
-			}
-			.hero-image img {
-				display: block;
-				margin: 0 auto;
-				border-radius: 12px;
-				box-shadow: var(--box-shadow);
-			}
-			.prose {
-				width: 720px;
-				max-width: calc(100% - 2em);
-				margin: auto;
-				padding: 1em;
-				color: rgb(var(--gray-dark));
-			}
-			.title {
-				margin-bottom: 1em;
-				padding: 1em 0;
-				text-align: center;
-				line-height: 1;
-			}
-			.title h1 {
-				margin: 0 0 0.5em 0;
-			}
-			.date {
-				margin-bottom: 0.5em;
-				color: rgb(var(--gray));
-			}
-			.last-updated-on {
-				font-style: italic;
-			}
-		</style>
+		<BaseHead title={title} description={description || title} />
 	</head>
 
-	<body>
+	<body class="bg-gray-50 text-gray-900 font-sans">
 		<Header />
-		<main>
-			<article>
-				<div class="hero-image">
-					{heroImage && <Image width={1020} height={510} src={heroImage} alt="" />}
-				</div>
-				<div class="prose">
-					<div class="title">
-						<div class="date">
-							<FormattedDate date={pubDate} />
-							{
-								updatedDate && (
-									<div class="last-updated-on">
-										Last updated on <FormattedDate date={updatedDate} />
-									</div>
-								)
-							}
-						</div>
-						<h1>{title}</h1>
-						<hr />
+		<main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+			<article class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+				{heroImage && (
+					<div class="w-full aspect-video">
+						<Image width={1020} height={510} src={heroImage} alt="" class="w-full h-full object-cover" />
 					</div>
-					<slot />
+				)}
+				
+				<div class="px-6 py-8 sm:px-10 sm:py-12">
+					<div class="flex flex-wrap items-center gap-3 mb-6">
+						<span class="inline-flex items-center rounded-md bg-blue-50 px-2.5 py-1 text-sm font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
+							{category}
+						</span>
+						<time datetime={pubDate.toISOString()} class="text-sm text-gray-500">
+							{pubDate.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' })}
+						</time>
+					</div>
+
+					<h1 class="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900 mb-6 leading-tight">
+						{title}
+					</h1>
+
+					{tags && tags.length > 0 && (
+						<div class="flex flex-wrap gap-2 mb-8">
+							{tags.map((tag: string) => (
+								<span class="inline-flex items-center rounded-md bg-gray-100 px-2.5 py-1 text-sm font-medium text-gray-600">
+									#{tag}
+								</span>
+							))}
+						</div>
+					)}
+					
+					{originalUrl && (
+						<div class="mb-8 p-4 bg-gray-50 rounded-lg border border-gray-200">
+							<p class="text-sm text-gray-600">
+								<span class="font-bold mr-2">情報元:</span>
+								<a href={originalUrl} target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline break-all">
+									{originalUrl}
+								</a>
+							</p>
+						</div>
+					)}
+
+					<div class="prose prose-lg prose-blue max-w-none prose-headings:font-bold prose-a:text-blue-600 hover:prose-a:text-blue-500">
+						<slot />
+					</div>
 				</div>
 			</article>
 		</main>
