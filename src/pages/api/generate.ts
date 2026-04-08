@@ -1,15 +1,46 @@
 export const prerender = false;
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { Octokit } from "@octokit/rest";
+import { verifyAuthenticationResponse } from '@simplewebauthn/server';
 
-export async function POST({ request }: { request: Request }) {
+export async function POST({ request, cookies }: { request: Request, cookies: any }) {
   try {
     const body = await request.json();
-    const { url, text, memo, password } = body;
+    const { url, text, memo, passkeyResponse } = body;
 
-    // パスワードチェック
-    if (password !== process.env.ADMIN_PASSWORD) {
-      return new Response(JSON.stringify({ error: "パスワードが間違っています。環境変数 ADMIN_PASSWORD を設定してください。" }), { status: 401 });
+    // パスキー認証チェック
+    const expectedChallenge = cookies.get('authentication_challenge')?.value;
+    if (!expectedChallenge || !passkeyResponse) {
+        return new Response(JSON.stringify({ error: "認証が必要です（再度お試しください）" }), { status: 401 });
+    }
+
+    if (!process.env.PASSKEY_CREDENTIAL_ID || !process.env.PASSKEY_PUBLIC_KEY) {
+        return new Response(JSON.stringify({ error: "Vercelの環境変数にPASSKEYが設定されていません。" }), { status: 500 });
+    }
+
+    const expectedOrigin = new URL(request.url).origin;
+    const rpID = new URL(request.url).hostname;
+
+    try {
+        const verification = await verifyAuthenticationResponse({
+            response: passkeyResponse,
+            expectedChallenge,
+            expectedOrigin,
+            expectedRPID: rpID,
+            credential: {
+                id: process.env.PASSKEY_CREDENTIAL_ID,
+                publicKey: new Uint8Array(Buffer.from(process.env.PASSKEY_PUBLIC_KEY, 'base64url')),
+                counter: 0,
+            },
+        });
+
+        if (!verification.verified) {
+             return new Response(JSON.stringify({ error: "生体認証の検証に失敗しました" }), { status: 401 });
+        }
+        cookies.delete('authentication_challenge', { path: '/' });
+    } catch (authErr: any) {
+         console.error("Auth Error", authErr);
+         return new Response(JSON.stringify({ error: `パスキー認証エラー: ${authErr.message}` }), { status: 401 });
     }
 
     if (!process.env.GEMINI_API_KEY) {

@@ -19,6 +19,8 @@
     "@astrojs/vercel": "^10.0.4",
     "@google/generative-ai": "^0.24.1",
     "@octokit/rest": "^22.0.1",
+    "@simplewebauthn/browser": "^13.3.0",
+    "@simplewebauthn/server": "^13.3.0",
     "@tailwindcss/typography": "^0.5.19",
     "@tailwindcss/vite": "^4.2.2",
     "astro": "^6.1.4",
